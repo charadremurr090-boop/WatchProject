@@ -1,0 +1,39 @@
+body {
+    margin: 0;
+    background-color: #F5F5F5;
+    font-family: 'Times New Roman', Times, serif;
+}
+
+#container {
+    width: 350px;
+    margin: 80px auto;
+    text-align: center;
+}
+
+input {
+    width: 250px;
+    height: 35px;
+
+    margin: 10px;
+
+    font-size: 16px;
+}
+
+button {
+
+    width: 260px;
+    height: 40px;
+
+    margin-top: 15px;
+
+    font-size: 16px;
+
+}
+
+#goRegister {
+
+    color: blue;
+
+    margin-top: 40px;
+
+}
