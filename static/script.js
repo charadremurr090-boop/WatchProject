@@ -1,216 +1,538 @@
-let container = document.getElementById("container");
+let container=document.getElementById("container");
 
-const IMG = "/static/images/";
+const IMG="/static/images/";
 
-async function checkLogin() {
+const LOGIN_PATTERN=/^[A-Za-z0-9_]{3,20}$/;
+const EMAIL_PATTERN=/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+const PASSWORD_PATTERN=/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d_]{3,20}$/;
 
-    const response = await fetch("/check_login");
-    const result = await response.json();
+let registerData={
+email:"",
+username:"",
+password:"",
+confirmPassword:""
+};
 
-    if (result.logged) {
-        showMain(result.username);
-    } else {
-        showLogin();
-    }
+let loginData={
+username:"",
+password:""
+};
+
+async function checkLogin(){
+
+const response=await fetch("/check_login");
+const result=await response.json();
+
+if(result.logged){
+showMain(result.username);
+}else{
+showLogin();
+}
 
 }
 
-function showLogin() {
+function showLogin(){
 
-    container.innerHTML = `
+container.innerHTML=`
+<h1><img src="${IMG}lock.png" style="width:64px;height:64px;"></h1>
 
-        <h1>
-            <img src="${IMG}lock.png" style="width:64px;height:64px;">
-        </h1>
+<h2>Авторизация</h2>
 
-        <h2>Авторизация</h2>
+<input
+id="loginUsername"
+type="text"
+placeholder="Логин или почта"
+value="${loginData.username}"
+>
 
-        <input
-            type="text"
-            id="loginUsername"
-            placeholder="Логин"
-        >
+<input
+id="loginPassword"
+type="password"
+placeholder="Пароль"
+value="${loginData.password}"
+>
 
-        <input
-            type="password"
-            id="loginPassword"
-            placeholder="Пароль"
-        >
+<button id="loginButton">
+Войти
+</button>
 
-        <button id="loginButton">
-            Войти
-        </button>
+<p id="goRegister">
+Нет аккаунта? Зарегистрироваться
+</p>
+`;
 
-        <p id="goRegister" style="cursor:pointer;">
-            Нет аккаунта? Зарегистрироваться
-        </p>
+document.getElementById("goRegister").onclick=showRegister;
+document.getElementById("loginButton").onclick=loginUser;
 
-    `;
+document.getElementById("loginUsername").oninput=function(){
+loginData.username=this.value;
+};
 
-    document.getElementById("goRegister").onclick = showRegister;
-
-    document.getElementById("loginButton").onclick = loginUser;
-
-}
-
-function showRegister() {
-
-    container.innerHTML = `
-
-        <h1>
-            <img src="${IMG}paper.png" style="width:64px;height:64px;">
-        </h1>
-
-        <h2>Регистрация</h2>
-
-        <input
-            type="email"
-            id="email"
-            placeholder="Почта"
-        >
-
-        <input
-            type="text"
-            id="registerUsername"
-            placeholder="Логин"
-        >
-
-        <input
-            type="password"
-            id="registerPassword"
-            placeholder="Пароль"
-        >
-
-        <button id="registerButton">
-            Зарегистрироваться
-        </button>
-
-        <p id="goLogin" style="cursor:pointer;">
-            Уже есть аккаунт? Войти
-        </p>
-
-    `;
-
-    document.getElementById("goLogin").onclick = showLogin;
-
-    document.getElementById("registerButton").onclick = registerUser;
+document.getElementById("loginPassword").oninput=function(){
+loginData.password=this.value;
+};
 
 }
 
-async function registerUser() {
+function showRegister(){
 
-    const username =
-        document.getElementById("registerUsername").value;
+container.innerHTML=`
+<h1><img src="${IMG}paper.png" style="width:64px;height:64px;"></h1>
 
-    const password =
-        document.getElementById("registerPassword").value;
+<h2>Регистрация</h2>
 
-    if(username=="" || password==""){
+<input
+id="email"
+type="email"
+placeholder="Почта"
+value="${registerData.email}"
+>
 
-        alert("Заполните все поля");
+<div class="email-rules">
 
-        return;
+<div id="emailRuleFormat" class="rule invalid">
+❌ Корректный адрес электронной почты
+</div>
 
-    }
+<div id="emailRuleExists" class="rule invalid">
+❌ Почта не проверена
+</div>
 
-    const response = await fetch("/register",{
+</div>
 
-        method:"POST",
+<input
+id="registerUsername"
+type="text"
+placeholder="Логин"
+value="${registerData.username}"
+>
 
-        headers:{
-            "Content-Type":"application/json"
-        },
+<div class="login-rules">
 
-        body:JSON.stringify({
+<div id="loginRuleLength" class="rule invalid">
+❌ От 3 до 20 символов
+</div>
 
-            username:username,
-            password:password
+<div id="loginRuleChars" class="rule invalid">
+❌ Только английские буквы, цифры и _
+</div>
 
-        })
+<div id="loginRuleExists" class="rule invalid">
+❌ Логин не проверен
+</div>
 
-    });
+</div>
 
-    const result = await response.json();
+<input
+id="registerPassword"
+type="password"
+placeholder="Пароль"
+value="${registerData.password}"
+>
 
-    if(result.success){
+<div class="password-rules">
 
-        alert("Аккаунт успешно создан!");
+<div id="ruleLength" class="rule invalid">
+❌ От 3 до 20 символов
+</div>
 
-        showLogin();
+<div id="ruleLetter" class="rule invalid">
+❌ Есть английская буква
+</div>
 
-    }else{
+<div id="ruleNumber" class="rule invalid">
+❌ Есть цифра
+</div>
 
-        alert(result.message);
+<div id="ruleChars" class="rule invalid">
+❌ Только буквы, цифры и _
+</div>
 
-    }
+</div>
+
+<input
+id="confirmPassword"
+type="password"
+placeholder="Подтвердите пароль"
+value="${registerData.confirmPassword}"
+>
+
+<div id="confirmRule" class="rule invalid">
+❌ Пароли не совпадают
+</div>
+
+<button id="registerButton">
+Зарегистрироваться
+</button>
+
+<p id="goLogin">
+Уже есть аккаунт? Войти
+</p>
+`;
+document.getElementById("goLogin").onclick=showLogin;
+
+document.getElementById("registerButton").onclick=registerUser;
+
+document.getElementById("registerPassword").addEventListener("input",validatePassword);
+document.getElementById("registerPassword").addEventListener("input",validateConfirmPassword);
+document.getElementById("confirmPassword").addEventListener("input",validateConfirmPassword);
+
+document.getElementById("email").oninput=function(){
+registerData.email=this.value;
+validateEmail();
+};
+
+
+document.getElementById("registerUsername").oninput=function(){
+registerData.username=this.value;
+validateUsername();
+};
+
+document.getElementById("registerPassword").oninput=function(){
+registerData.password=this.value;
+};
+
+document.getElementById("confirmPassword").oninput=function(){
+registerData.confirmPassword=this.value;
+};
+
+validatePassword();
+validateConfirmPassword();
+validateUsername();
+validateEmail();
 
 }
 
+async function registerUser(){
+
+const email=document.getElementById("email").value.trim();
+const username=document.getElementById("registerUsername").value.trim();
+const password=document.getElementById("registerPassword").value.trim();
+const confirm=document.getElementById("confirmPassword").value.trim();
+
+if(!EMAIL_PATTERN.test(email)){
+alert("Введите корректную электронную почту.");
+return;
+}
+
+if(!LOGIN_PATTERN.test(username)){
+alert("У вас соблюдены не все требования к логину.");
+return;
+}
+
+if(!PASSWORD_PATTERN.test(password)){
+alert("У вас соблюдены не все требования к паролю.");
+return;
+}
+
+if(password!==confirm){
+alert("Пароли не совпадают.");
+return;
+}
+
+const response=await fetch("/register",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+email:email,
+username:username,
+password:password
+})
+});
+
+const result=await response.json();
+
+if(result.success){
+
+registerData={
+email:"",
+username:"",
+password:"",
+confirmPassword:""
+};
+
+alert("Аккаунт успешно создан!");
+
+showLogin();
+
+}else{
+
+alert(result.message);
+
+}
+
+}
 async function loginUser(){
 
-    const username =
-        document.getElementById("loginUsername").value;
+const username=document.getElementById("loginUsername").value.trim();
+const password=document.getElementById("loginPassword").value.trim();
 
-    const password =
-        document.getElementById("loginPassword").value;
+if(username===""){
+alert("Введите логин.");
+return;
+}
 
-    const response = await fetch("/login",{
+if(password===""){
+alert("Введите пароль.");
+return;
+}
 
-        method:"POST",
+const response=await fetch("/login",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+username:username,
+password:password
+})
+});
 
-        headers:{
-            "Content-Type":"application/json"
-        },
+const result=await response.json();
 
-        body:JSON.stringify({
+if(result.success){
 
-            username:username,
-            password:password
+loginData={
+username:"",
+password:""
+};
 
-        })
+showMain(result.username);
 
-    });
+}else{
 
-    const result = await response.json();
+alert(result.message||"Неверный логин или пароль.");
 
-    if(result.success){
-
-        showMain(result.username);
-
-    }else{
-
-        alert(result.message);
-
-    }
+}
 
 }
 
 function showMain(username){
 
-    container.innerHTML=`
+container.innerHTML=`
 
-        <h1>Добро пожаловать</h1>
+<h1>Добро пожаловать!</h1>
 
-        <h2>${username}</h2>
+<h2>${username}</h2>
 
-        <br>
+<button id="logoutButton">
+Выйти
+</button>
 
-        <button id="logout">
-            Выйти
-        </button>
+`;
 
-    `;
-
-    document.getElementById("logout").onclick=logout;
+document.getElementById("logoutButton").onclick=logout;
 
 }
 
 async function logout(){
 
-    await fetch("/logout");
+await fetch("/logout");
 
-    showLogin();
+showLogin();
+
+}
+function validatePassword(){
+
+const password=document.getElementById("registerPassword").value;
+
+updateRule(
+"ruleLength",
+password.length>=3&&password.length<=20,
+"От 3 до 20 символов"
+);
+
+updateRule(
+"ruleLetter",
+/[A-Za-z]/.test(password),
+"Есть английская буква"
+);
+
+updateRule(
+"ruleNumber",
+/\d/.test(password),
+"Есть цифра"
+);
+
+updateRule(
+"ruleChars",
+password.length>0 && /^[A-Za-z0-9_]+$/.test(password),
+"Только буквы, цифры и _"
+);
 
 }
 
+function validateConfirmPassword(){
+
+const password=document.getElementById("registerPassword").value;
+const confirm=document.getElementById("confirmPassword").value;
+
+const element=document.getElementById("confirmRule");
+
+if(confirm.length===0){
+
+element.className="rule invalid";
+element.innerHTML="❌ Пароли не совпадают";
+return;
+
+}
+
+if(password===confirm){
+
+element.className="rule valid";
+element.innerHTML="✅ Пароли совпадают";
+
+}else{
+
+element.className="rule invalid";
+element.innerHTML="❌ Пароли не совпадают";
+
+}
+
+}
+
+function updateRule(id,ok,text){
+
+const element=document.getElementById(id);
+
+if(ok){
+
+element.className="rule valid";
+element.innerHTML="✅ "+text;
+
+}else{
+
+element.className="rule invalid";
+element.innerHTML="❌ "+text;
+
+}
+
+}
+async function validateUsername(){
+
+const username=document.getElementById("registerUsername").value;
+
+updateRule(
+"loginRuleLength",
+username.length>=3&&username.length<=20,
+"От 3 до 20 символов"
+);
+
+updateRule(
+"loginRuleChars",
+LOGIN_PATTERN.test(username),
+"Только английские буквы, цифры и _"
+);
+
+const existsRule=document.getElementById("loginRuleExists");
+
+if(username.length===0){
+existsRule.className="rule invalid";
+existsRule.innerHTML="❌ Логин не введён";
+return;
+}
+
+if(!LOGIN_PATTERN.test(username)){
+existsRule.className="rule invalid";
+existsRule.innerHTML="❌ Исправьте логин";
+return;
+}
+
+try{
+
+const response=await fetch("/check_username",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+username:username
+})
+});
+
+const result=await response.json();
+
+if(result.exists){
+
+existsRule.className="rule invalid";
+existsRule.innerHTML="❌ Такой логин уже существует";
+
+}else{
+
+existsRule.className="rule valid";
+existsRule.innerHTML="✅ Логин свободен";
+
+}
+
+}catch{
+
+existsRule.className="rule invalid";
+existsRule.innerHTML="❌ Ошибка проверки";
+
+}
+}
+async function validateEmail(){
+
+const email=document.getElementById("email").value;
+
+updateRule(
+"emailRuleFormat",
+EMAIL_PATTERN.test(email),
+"Корректный адрес электронной почты"
+);
+
+const existsRule=document.getElementById("emailRuleExists");
+
+if(email.length===0){
+
+existsRule.className="rule invalid";
+existsRule.innerHTML="❌ Почта не введена";
+return;
+
+}
+
+if(!EMAIL_PATTERN.test(email)){
+
+existsRule.className="rule invalid";
+existsRule.innerHTML="❌ Исправьте почту";
+return;
+
+}
+
+try{
+
+const response=await fetch("/check_email",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+email:email
+})
+});
+
+const result=await response.json();
+
+if(result.exists){
+
+existsRule.className="rule invalid";
+existsRule.innerHTML="❌ Такая почта уже существует";
+
+}else{
+
+existsRule.className="rule valid";
+existsRule.innerHTML="✅ Почта свободна";
+
+}
+
+}catch{
+
+existsRule.className="rule invalid";
+existsRule.innerHTML="❌ Ошибка проверки";
+
+}
+
+}
 checkLogin();
