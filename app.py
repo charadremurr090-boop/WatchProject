@@ -75,12 +75,14 @@ def register():
         })
 
     conn = get_db()
+    cursor = conn.cursor()
+    
     cursor.execute(
         """
         SELECT * FROM users
         WHERE username=? OR email=?
         """,
-        (username, username)
+        (username, email)
     )
 
     if cursor.fetchone():
@@ -167,7 +169,6 @@ def check_email():
     return jsonify({
         "exists": user is not None
     })
-@app.route("/login", methods=["POST"])
 @app.route("/login", methods=["POST"])
 def login():
 

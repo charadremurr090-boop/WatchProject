@@ -1,0 +1,9 @@
+# Файл с секретами
+.env
+
+# База данных
+database.db
+
+# Кэш Python
+__pycache__/
+*.pyc
