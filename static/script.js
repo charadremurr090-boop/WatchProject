@@ -33,6 +33,8 @@ async function checkLogin() {
 
 function showLogin() {
 
+    container.className = "";
+
     container.innerHTML = `
 <h1><img src="${IMG}lock.png" style="width:64px;height:64px;"></h1>
 
@@ -75,6 +77,8 @@ value="${loginData.password}"
 }
 
 function showRegister() {
+
+    container.className = "";
 
     container.innerHTML = `
 <h1><img src="${IMG}paper.png" style="width:64px;height:64px;"></h1>
@@ -311,11 +315,75 @@ async function loginUser() {
 
 function showMain(username) {
 
+    container.className = "dashboard";
+
     container.innerHTML = `
 
-<h1>Добро пожаловать!</h1>
+<div id="mainWindow">
 
-<h2>${username}</h2>
+    <div id="leftPanel">
+
+        <h3>Часы</h3>
+
+        <button class="watchButton" id="watch1">
+            Мои часы
+        </button>
+
+        <button id="addWatchButton">
+            +
+        </button>
+
+    </div>
+
+    <div id="rightPanel">
+
+    <div class="welcomeScreen">
+
+        <img
+            src="${IMG}watch.png"
+            alt="Watch"
+            class="welcomeWatch"
+        >
+
+        <h2>Добро пожаловать, ${username}</h2>
+
+        <p>
+            Выберите часы слева.
+        </p>
+
+    </div>
+
+</div>
+
+`;
+
+    document.getElementById("logoutButton")?.remove();
+
+    document.getElementById("watch1").onclick = showWatchMenu;
+
+    document.getElementById("addWatchButton").onclick = showAddWatch;
+
+}
+
+function showWatchMenu() {
+
+    document.getElementById("rightPanel").innerHTML = `
+
+<h2>Мои часы</h2>
+
+<button id="gpsButton">
+GPS
+</button>
+
+<button id="screenButton">
+Скриншот
+</button>
+
+<button id="chatButton">
+Чат
+</button>
+
+<br><br>
 
 <button id="logoutButton">
 Выйти
@@ -324,6 +392,32 @@ function showMain(username) {
 `;
 
     document.getElementById("logoutButton").onclick = logout;
+
+}
+
+function showAddWatch() {
+
+    document.getElementById("rightPanel").innerHTML = `
+
+<h2>Добавить часы</h2>
+
+<input
+id="watchName"
+type="text"
+placeholder="Название часов"
+>
+
+<button id="createWatch">
+Добавить
+</button>
+
+`;
+
+    document.getElementById("createWatch").onclick = function () {
+
+        alert("Позже здесь будут создаваться новые часы.");
+
+    };
 
 }
 
