@@ -23,3 +23,11 @@ conn.commit()
 conn.close()
 
 print("База данных создана.")
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS watches(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    owner TEXT NOT NULL,
+    watch_name TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)
+""")
