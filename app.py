@@ -33,7 +33,14 @@ def init_db():
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """)
-
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS watches(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        owner TEXT NOT NULL,
+        watch_name TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
     conn.commit()
     conn.close()
 
@@ -76,13 +83,10 @@ def register():
 
     conn = get_db()
     cursor = conn.cursor()
-    
+
     cursor.execute(
-        """
-        SELECT * FROM users
-        WHERE username=? OR email=?
-        """,
-        (username, email)
+        "SELECT id FROM users WHERE username=?",
+        (username,)
     )
 
     if cursor.fetchone():
@@ -121,8 +125,99 @@ def register():
         "success": True,
         "message": "Аккаунт создан."
     })
+@app.route("/add_watch", methods=["POST"])
+def add_watch():
+
+    data = request.get_json()
+
+    watch_name = data.get("watch_name", "").strip()
+
+    if "user" not in session:
+        return jsonify({
+            "success": False,
+            "message": "Вы не авторизованы."
+        })
+
+    if watch_name == "":
+        return jsonify({
+            "success": False,
+            "message": "Введите название часов."
+        })
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        INSERT INTO watches(owner,watch_name)
+        VALUES(?,?)
+        """,
+        (
+            session["user"],
+            watch_name
+        )
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "success": True
+    })
+@app.route("/get_watches")
+def get_watches():
+
+    if "user" not in session:
+        return jsonify([])
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT id,watch_name
+        FROM watches
+        WHERE owner=?
+        ORDER BY id DESC
+        """,
+        (
+            session["user"],
+        )
+    )
+
+    watches = cursor.fetchall()
+
+    conn.close()
+
+    return jsonify([
+        dict(x)
+        for x in watches
+    ])
+@app.route("/gps", methods=["POST"])
+def gps():
+
+    return jsonify({
+        "success": True,
+        "message": "GPS вызван."
+    })
 
 
+@app.route("/screenshot", methods=["POST"])
+def screenshot():
+
+    return jsonify({
+        "success": True,
+        "message": "Screenshot вызван."
+    })
+
+
+@app.route("/chat", methods=["POST"])
+def chat():
+
+    return jsonify({
+        "success": True,
+        "message": "Chat вызван."
+    })
 @app.route("/check_username", methods=["POST"])
 def check_username():
 
