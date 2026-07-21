@@ -296,16 +296,17 @@ async function loginUser() {
 
     const result = await response.json();
 
-    if (result.success) {
+    if(result.success){
 
-        loginData = {
-            username: "",
-            password: ""
-        };
+    loginData.username=result.username;
 
-        showMain(result.username);
+    loginData.password="";
 
-    } else {
+    showMain(result.username);
+
+}
+
+     else {
 
         alert(result.message || "Неверный логин или пароль.");
 
@@ -325,16 +326,13 @@ function showMain(username) {
 
         <h3>Часы</h3>
 
-        <button class="watchButton" id="watch1">
-            Мои часы
-        </button>
+            <div id="watchList"></div>
 
-        <button id="addWatchButton">
-            +
+            <button id="addWatchButton">
+        +
         </button>
 
     </div>
-
     <div id="rightPanel">
 
     <div class="welcomeScreen">
@@ -359,9 +357,10 @@ function showMain(username) {
 
     document.getElementById("logoutButton")?.remove();
 
-    document.getElementById("watch1").onclick = showWatchMenu;
 
     document.getElementById("addWatchButton").onclick = showAddWatch;
+
+    loadWatches();
 
 }
 
@@ -413,13 +412,10 @@ placeholder="Название часов"
 
 `;
 
-    document.getElementById("createWatch").onclick = function () {
-
-        alert("Позже здесь будут создаваться новые часы.");
-
+    document.getElementById("createWatch").onclick = addWatch;
     };
 
-}
+
 
 async function logout() {
 
@@ -628,5 +624,95 @@ async function validateEmail() {
 
     }
 
+}
+async function addWatch(){
+
+const watch=document.getElementById("watchName").value.trim();
+
+if(watch===""){
+alert("Введите название часов.");
+return;
+}
+
+const response=await fetch("/add_watch",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+watch_name:watch
+})
+
+});
+
+const result=await response.json();
+
+if(result.success){
+
+showMain(loginData.username);
+
+}else{
+
+alert(result.message);
+
+}
+
+}
+
+async function loadWatches(){
+
+    const response = await fetch("/get_watches");
+    const watches = await response.json();
+
+    const list = document.getElementById("watchList");
+
+    list.innerHTML = "";
+
+    watches.forEach(watch => {
+
+        const button = document.createElement("button");
+
+        button.className = "watchButton";
+        button.innerText = watch.watch_name;
+
+        button.onclick = function () {
+            showWatchMenu(watch);
+        };
+
+        list.appendChild(button);
+
+    });
+
+}
+
+
+async function gps(){
+
+await fetch("/gps",{
+method:"POST"
+});
+
+alert("GPS");
+
+}
+async function screenshot(){
+
+await fetch("/screenshot",{
+method:"POST"
+});
+
+alert("Screenshot");
+
+}
+async function chat(){
+
+await fetch("/chat",{
+method:"POST"
+});
+
+alert("Chat");
 }
 checkLogin();
