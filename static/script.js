@@ -364,11 +364,10 @@ function showMain(username) {
 
 }
 
-function showWatchMenu() {
+function showWatchMenu(watch) {
 
     document.getElementById("rightPanel").innerHTML = `
-
-<h2>Мои часы</h2>
+<h2>${watch.watch_name}</h2>
 
 <button id="gpsButton">
 GPS
@@ -387,11 +386,12 @@ GPS
 <button id="logoutButton">
 Выйти
 </button>
-
 `;
 
+    document.getElementById("gpsButton").onclick = gps;
+    document.getElementById("screenButton").onclick = screenshot;
+    document.getElementById("chatButton").onclick = chat;
     document.getElementById("logoutButton").onclick = logout;
-
 }
 
 function showAddWatch() {
