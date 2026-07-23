@@ -4,7 +4,7 @@ const IMG = "/static/images/";
 
 const LOGIN_PATTERN = /^[A-Za-z0-9_]{3,20}$/;
 const EMAIL_PATTERN = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d_]{3,20}$/;
+const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*[\d_]).{3,20}$/;
 
 let registerData = {
     email: "",
@@ -145,12 +145,10 @@ value="${registerData.password}"
 </div>
 
 <div id="ruleNumber" class="rule invalid">
-❌ Есть цифра
+❌ Есть цифра или _
 </div>
 
-<div id="ruleChars" class="rule invalid">
-❌ Только буквы, цифры и _
-</div>
+
 
 </div>
 
@@ -367,6 +365,7 @@ function showMain(username) {
 function showWatchMenu(watch) {
 
     document.getElementById("rightPanel").innerHTML = `
+
 <h2>${watch.watch_name}</h2>
 
 <button id="gpsButton">
@@ -386,12 +385,14 @@ GPS
 <button id="logoutButton">
 Выйти
 </button>
+
 `;
 
     document.getElementById("gpsButton").onclick = gps;
     document.getElementById("screenButton").onclick = screenshot;
     document.getElementById("chatButton").onclick = chat;
     document.getElementById("logoutButton").onclick = logout;
+
 }
 
 function showAddWatch() {
@@ -413,7 +414,7 @@ placeholder="Название часов"
 `;
 
     document.getElementById("createWatch").onclick = addWatch;
-    };
+    }
 
 
 
@@ -442,15 +443,11 @@ function validatePassword() {
 
     updateRule(
         "ruleNumber",
-        /\d/.test(password),
-        "Есть цифра"
+        /[\d_]/.test(password),
+    "   Есть цифра или _"
     );
 
-    updateRule(
-        "ruleChars",
-        password.length > 0 && /^[A-Za-z0-9_]+$/.test(password),
-        "Только буквы, цифры и _"
-    );
+
 
 }
 
