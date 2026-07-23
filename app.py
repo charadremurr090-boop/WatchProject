@@ -7,6 +7,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 load_dotenv()
 
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+
+app = Flask(__name__)
+app.secret_key = os.getenv("SECRET_KEY")
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 
@@ -60,7 +64,7 @@ def register():
     password = data.get("password", "").strip()
 
     username_pattern = r"^[A-Za-z0-9_]{3,20}$"
-    password_pattern = r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d_]{3,20}$"
+    password_pattern = r"^(?=.*[A-Za-z])(?=.*[\d_]).{3,20}$"
     email_pattern = r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
 
     if not re.fullmatch(email_pattern, email):
@@ -340,5 +344,5 @@ if __name__ == "__main__":
     app.run(
         host="127.0.0.1",
         port=8888,
-        debug=True
+        debug=DEBUG
     )
