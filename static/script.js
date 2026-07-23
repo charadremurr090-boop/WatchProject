@@ -320,10 +320,20 @@ function showMain(username) {
 
 <div id="mainWindow">
 
+    <div id="topBar">
+
+        <img
+            src="${IMG}profile.png"
+            id="homeButton"
+            alt="Главная"
+        >
+
+    </div>
+
     <div id="leftPanel">
 
         <h3>Часы</h3>
-
+        
             <div id="watchList"></div>
 
             <button id="addWatchButton">
@@ -347,16 +357,33 @@ function showMain(username) {
             Выберите часы слева.
         </p>
 
+        <br>
+
+        <button id="logoutButton">
+        Выйти из аккаунта
+        </button>
+
     </div>
 
 </div>
 
 `;
 
-    document.getElementById("logoutButton")?.remove();
+document.getElementById("addWatchButton").onclick = showAddWatch;
 
+document.getElementById("homeButton").onclick = function () {
+    showMain(currentUser);
+};
+
+document.getElementById("logoutButton").onclick = logout;
+
+loadWatches();
 
     document.getElementById("addWatchButton").onclick = showAddWatch;
+
+    document.getElementById("homeButton").onclick = function () {
+    showMain(loginData.username);
+};
 
     loadWatches();
 
@@ -380,18 +407,11 @@ GPS
 Чат
 </button>
 
-<br><br>
-
-<button id="logoutButton">
-Выйти
-</button>
-
 `;
 
     document.getElementById("gpsButton").onclick = gps;
     document.getElementById("screenButton").onclick = screenshot;
     document.getElementById("chatButton").onclick = chat;
-    document.getElementById("logoutButton").onclick = logout;
 
 }
 

@@ -86,10 +86,13 @@ font-weight:bold;
 }
 
 #leftPanel h3{
-    margin:0;
-    padding:20px;
-    border-bottom:1px solid #d5d5d5;
-    font-weight:normal;
+    
+    margin-top: 45px;
+    padding: 20px;
+
+    border-bottom: 1px solid #d5d5d5;
+
+    font-weight: normal;
 }
 
 .watchButton{
@@ -211,5 +214,43 @@ font-weight:bold;
     margin-bottom:30px;
 
     opacity:0.95;
+
+}
+
+#mainWindow{
+    position: relative;
+    display: flex;
+    height: 650px;
+    border: 1px solid #bdbdbd;
+}
+
+#topBar{
+
+    position: absolute;
+
+    top: 15px;
+    left: 15px;
+
+    z-index: 100;
+
+}
+
+#homeButton{
+
+    width: 40px;
+    height: 40px;
+
+    cursor: pointer;
+
+    opacity: .7;
+
+    transition: .2s;
+
+}
+
+#homeButton:hover{
+
+    opacity: 1;
+    transform: scale(1.05);
 
 }
