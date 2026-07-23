@@ -704,25 +704,75 @@ async function loadWatches(){
     });
 
 }
+const gpsPool = [
+    {
+        name: "Пандора",
+        lat: 54.545582,
+        lon: 36.252543
+    },
+    {
+        name: "Музей космонавтики",
+        lat: 54.516904,
+        lon: 36.230728
+    },
+    {
+        name: "Сквер мира",
+        lat: 54.516006,
+        lon: 36.244233
+    },
+    {
+        name: "Биосфера",
+        lat: 54.498662,
+        lon: 36.202081
+    },
+    {
+        name: "Автовокзал Калуга",
+        lat: 54.533300,
+        lon: 36.277496
+    }
+];
 
+async function gps() {
 
-async function gps(){
+    const point = gpsPool[Math.floor(Math.random() * gpsPool.length)];
 
-await fetch("/gps",{
-method:"POST"
-});
+    document.getElementById("rightPanel").innerHTML = `
+        <h2>Геолокация</h2>
 
-alert("GPS");
+        <p><b>Место:</b> ${point.name}</p>
+        <p><b>Широта:</b> ${point.lat}</p>
+        <p><b>Долгота:</b> ${point.lon}</p>
 
+        <br>
+
+        <iframe
+            width="100%"
+            height="350"
+            style="border:0;border-radius:10px;"
+            src="https://maps.google.com/maps?q=${point.lat},${point.lon}&z=15&output=embed">
+        </iframe>
+
+        <br><br>
+
+        <button onclick="showMain(loginData.username)">
+            Назад
+        </button>
+    `;
 }
-async function screenshot(){
+async function screenshot() {
 
-await fetch("/screenshot",{
-method:"POST"
-});
+    document.getElementById("rightPanel").innerHTML = `
+        <h2>Скриншот часов</h2>
 
-alert("Screenshot");
+        <img src="/static/images/screenshot.jpg"
+             style="max-width:100%; max-height:500px; border-radius:10px;">
 
+        <br><br>
+
+        <button onclick="showMain(loginData.username)">
+            Назад
+        </button>
+    `;
 }
 async function chat(){
 
