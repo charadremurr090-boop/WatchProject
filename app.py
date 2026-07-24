@@ -4,15 +4,13 @@ import re
 import os
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
-
+from datetime import datetime
 load_dotenv()
 
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY")
-app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY")
+app.secret_key = os.getenv("SECRET_KEY", "secret")
 
 DB = "database.db"
 
@@ -37,6 +35,7 @@ def init_db():
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """)
+
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS watches(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,6 +44,17 @@ def init_db():
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS messages(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        owner TEXT NOT NULL,
+        watch_name TEXT NOT NULL,
+        message TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -68,22 +78,13 @@ def register():
     email_pattern = r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
 
     if not re.fullmatch(email_pattern, email):
-        return jsonify({
-            "success": False,
-            "message": "Некорректная почта."
-        })
+        return jsonify(success=False, message="Некорректная почта.")
 
     if not re.fullmatch(username_pattern, username):
-        return jsonify({
-            "success": False,
-            "message": "Некорректный логин."
-        })
+        return jsonify(success=False, message="Некорректный логин.")
 
     if not re.fullmatch(password_pattern, password):
-        return jsonify({
-            "success": False,
-            "message": "Некорректный пароль."
-        })
+        return jsonify(success=False, message="Некорректный пароль.")
 
     conn = get_db()
     cursor = conn.cursor()
@@ -95,10 +96,8 @@ def register():
 
     if cursor.fetchone():
         conn.close()
-        return jsonify({
-            "success": False,
-            "message": "Такой логин уже существует."
-        })
+        return jsonify(success=False,
+                       message="Такой логин уже существует.")
 
     cursor.execute(
         "SELECT id FROM users WHERE email=?",
@@ -107,46 +106,119 @@ def register():
 
     if cursor.fetchone():
         conn.close()
-        return jsonify({
-            "success": False,
-            "message": "Такая почта уже существует."
-        })
-
-    hashed = generate_password_hash(password)
+        return jsonify(success=False,
+                       message="Такая почта уже существует.")
 
     cursor.execute(
         """
-        INSERT INTO users(email, username, password)
+        INSERT INTO users(email,username,password)
         VALUES(?,?,?)
         """,
-        (email, username, hashed)
+        (
+            email,
+            username,
+            generate_password_hash(password)
+        )
     )
 
     conn.commit()
     conn.close()
 
-    return jsonify({
-        "success": True,
-        "message": "Аккаунт создан."
-    })
+    return jsonify(
+        success=True,
+        message="Аккаунт создан."
+    )
+
+
+@app.route("/login", methods=["POST"])
+def login():
+
+    data = request.get_json()
+
+    login = data.get("username", "").strip()
+    password = data.get("password", "").strip()
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT *
+        FROM users
+        WHERE username=? OR email=?
+        """,
+        (
+            login,
+            login
+        )
+    )
+
+    user = cursor.fetchone()
+
+    conn.close()
+
+    if user is None:
+        return jsonify(
+            success=False,
+            message="Пользователь не найден."
+        )
+
+    if not check_password_hash(
+        user["password"],
+        password
+    ):
+        return jsonify(
+            success=False,
+            message="Неверный пароль."
+        )
+
+    session["user"] = user["username"]
+    session["email"] = user["email"]
+
+    return jsonify(
+        success=True,
+        username=user["username"],
+        email=user["email"]
+    )
+@app.route("/check_login")
+def check_login():
+
+    if "user" in session:
+        return jsonify(
+            logged=True,
+            username=session["user"],
+            email=session["email"]
+        )
+
+    return jsonify(logged=False)
+
+
+@app.route("/logout")
+def logout():
+
+    session.clear()
+
+    return jsonify(success=True)
+
+
 @app.route("/add_watch", methods=["POST"])
 def add_watch():
+
+    if "user" not in session:
+        return jsonify(
+            success=False,
+            message="Вы не авторизованы."
+        )
 
     data = request.get_json()
 
     watch_name = data.get("watch_name", "").strip()
 
-    if "user" not in session:
-        return jsonify({
-            "success": False,
-            "message": "Вы не авторизованы."
-        })
-
     if watch_name == "":
-        return jsonify({
-            "success": False,
-            "message": "Введите название часов."
-        })
+        return jsonify(
+            success=False,
+            message="Введите название часов."
+        )
 
     conn = get_db()
     cursor = conn.cursor()
@@ -165,9 +237,9 @@ def add_watch():
     conn.commit()
     conn.close()
 
-    return jsonify({
-        "success": True
-    })
+    return jsonify(success=True)
+
+
 @app.route("/get_watches")
 def get_watches():
 
@@ -179,7 +251,8 @@ def get_watches():
 
     cursor.execute(
         """
-        SELECT id,watch_name
+        SELECT id,
+               watch_name
         FROM watches
         WHERE owner=?
         ORDER BY id DESC
@@ -197,31 +270,116 @@ def get_watches():
         dict(x)
         for x in watches
     ])
+
+
+@app.route("/send_message", methods=["POST"])
+def send_message():
+
+    if "user" not in session:
+        return jsonify(success=False)
+
+    data = request.get_json()
+
+    watch_name = data.get("watch_name", "").strip()
+    message = data.get("message", "").strip()
+
+    if message == "":
+        return jsonify(
+            success=False,
+            message="Введите сообщение."
+        )
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    cursor.execute(
+        """
+        INSERT INTO messages(owner, watch_name, message, created_at)
+        VALUES(?,?,?,?)
+        """,
+        (
+            session["user"],
+            watch_name,
+            message,
+            time
+        )
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify(success=True)
+
+
+@app.route("/get_messages", methods=["POST"])
+def get_messages():
+
+    if "user" not in session:
+        return jsonify([])
+
+    data = request.get_json()
+
+    watch_name = data.get("watch_name", "").strip()
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            message,
+            created_at
+        FROM messages
+        WHERE owner=?
+        AND watch_name=?
+        ORDER BY id ASC
+        """,
+        (
+            session["user"],
+            watch_name
+        )
+    )
+
+    messages = cursor.fetchall()
+
+    conn.close()
+
+    return jsonify([
+        dict(x)
+        for x in messages
+    ])
 @app.route("/gps", methods=["POST"])
 def gps():
 
-    return jsonify({
-        "success": True,
-        "message": "GPS вызван."
-    })
+    if "user" not in session:
+        return jsonify(
+            success=False,
+            message="Не авторизован."
+        )
+
+    return jsonify(
+        success=True,
+        message="GPS вызван."
+    )
 
 
 @app.route("/screenshot", methods=["POST"])
 def screenshot():
 
-    return jsonify({
-        "success": True,
-        "message": "Screenshot вызван."
-    })
+    if "user" not in session:
+        return jsonify(
+            success=False,
+            message="Не авторизован."
+        )
+
+    return jsonify(
+        success=True,
+        message="Screenshot вызван."
+    )
 
 
-@app.route("/chat", methods=["POST"])
-def chat():
-
-    return jsonify({
-        "success": True,
-        "message": "Chat вызван."
-    })
 @app.route("/check_username", methods=["POST"])
 def check_username():
 
@@ -241,9 +399,9 @@ def check_username():
 
     conn.close()
 
-    return jsonify({
-        "exists": user is not None
-    })
+    return jsonify(
+        exists=user is not None
+    )
 
 
 @app.route("/check_email", methods=["POST"])
@@ -265,80 +423,13 @@ def check_email():
 
     conn.close()
 
-    return jsonify({
-        "exists": user is not None
-    })
-@app.route("/login", methods=["POST"])
-def login():
-
-    data = request.get_json()
-
-    login = data.get("username", "").strip()
-    password = data.get("password", "").strip()
-
-    conn = get_db()
-    cursor = conn.cursor()
-
-    cursor.execute(
-        """
-        SELECT * FROM users
-        WHERE username=? OR email=?
-        """,
-        (login, login)
+    return jsonify(
+        exists=user is not None
     )
-
-    user = cursor.fetchone()
-
-    conn.close()
-
-    if user is None:
-        return jsonify({
-            "success": False,
-            "message": "Пользователь не найден."
-        })
-
-    if not check_password_hash(user["password"], password):
-        return jsonify({
-            "success": False,
-            "message": "Неверный пароль."
-        })
-
-    session["user"] = user["username"]
-    session["email"] = user["email"]
-
-    return jsonify({
-        "success": True,
-        "username": user["username"],
-        "email": user["email"]
-    })
-
-@app.route("/check_login")
-def check_login():
-
-    if "user" in session:
-
-        return jsonify({
-            "logged": True,
-            "username": session["user"],
-            "email": session["email"]
-        })
-
-    return jsonify({
-        "logged": False
-    })
-
-
-@app.route("/logout")
-def logout():
-
-    session.clear()
-
-    return jsonify({
-        "success": True
-    })
 
 
 if __name__ == "__main__":
+
     init_db()
 
     app.run(
