@@ -17,7 +17,7 @@ let loginData = {
     username: "",
     password: ""
 };
-
+let currentWatch = null;
 async function checkLogin() {
 
     const response = await fetch("/check_login");
@@ -333,7 +333,7 @@ function showMain(username) {
     <div id="leftPanel">
 
         <h3>Часы</h3>
-        
+
             <div id="watchList"></div>
 
             <button id="addWatchButton">
@@ -372,7 +372,7 @@ function showMain(username) {
 document.getElementById("addWatchButton").onclick = showAddWatch;
 
 document.getElementById("homeButton").onclick = function () {
-    showMain(currentUser);
+    showMain(loginData.username);
 };
 
 document.getElementById("logoutButton").onclick = logout;
@@ -389,11 +389,20 @@ loadWatches();
 
 }
 
-function showWatchMenu(watch) {
+function showWatchMenu(watch){
 
-    document.getElementById("rightPanel").innerHTML = `
+    currentWatch = watch;
 
-<h2>${watch.watch_name}</h2>
+    const rightPanel = document.getElementById("rightPanel");
+
+    rightPanel.innerHTML = "";
+
+    const title = document.createElement("h2");
+    title.textContent = watch.watch_name;
+
+    rightPanel.appendChild(title);
+
+    rightPanel.innerHTML += `
 
 <button id="gpsButton">
 GPS
@@ -407,11 +416,18 @@ GPS
 Чат
 </button>
 
+<br><br>
+
+<button id="logoutButton">
+Выйти
+</button>
+
 `;
 
     document.getElementById("gpsButton").onclick = gps;
     document.getElementById("screenButton").onclick = screenshot;
-    document.getElementById("chatButton").onclick = chat;
+    document.getElementById("chatButton").onclick = showChat;
+    document.getElementById("logoutButton").onclick = logout;
 
 }
 
@@ -774,12 +790,141 @@ async function screenshot() {
         </button>
     `;
 }
-async function chat(){
+function showChat() {
 
-await fetch("/chat",{
-method:"POST"
+    document.getElementById("rightPanel").innerHTML = `
+
+<div id="chatWindow">
+
+    <div class="chatHeader">
+        <button id="backButton">← Назад</button>
+        <h2>${currentWatch.watch_name}</h2>
+    </div>
+
+    <div id="chatMessages"></div>
+
+    <div id="chatInputArea">
+
+        <input
+            id="chatInput"
+            type="text"
+            placeholder="Введите сообщение..."
+        >
+
+        <button id="sendButton">
+            Отправить
+        </button>
+
+    </div>
+
+</div>
+
+`;
+
+    document.getElementById("backButton").onclick = () => {
+        showWatchMenu(currentWatch);
+    };
+
+    document.getElementById("sendButton").onclick = sendMessage;
+
+    loadMessages();
+}
+
+
+
+async function sendMessage(){
+
+const text=document.getElementById("chatInput").value.trim();
+
+if(text==="") return;
+
+const response=await fetch("/send_message",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+watch_name:currentWatch.watch_name,
+message:text
+
+})
+
 });
 
-alert("Chat");
+const result=await response.json();
+
+if(result.success){
+
+document.getElementById("chatInput").value="";
+
+loadMessages();
+
+}else{
+
+alert(result.message);
+
 }
+
+}
+async function loadMessages(){
+
+const response=await fetch("/get_messages",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+watch_name:currentWatch.watch_name
+
+})
+
+});
+
+const messages=await response.json();
+
+const chat=document.getElementById("chatMessages");
+
+chat.innerHTML="";
+
+messages.forEach(msg=>{
+
+const block=document.createElement("div");
+
+block.className = "message";
+
+const text = document.createElement("div");
+text.className = "messageText";
+text.textContent = msg.message;
+
+const date = document.createElement("div");
+date.className = "messageDate";
+const d = new Date(msg.created_at);
+
+date.textContent =
+    d.toLocaleDateString("ru-RU") +
+    " " +
+    d.toLocaleTimeString("ru-RU", {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+
+block.appendChild(text);
+block.appendChild(date);
+
+chat.appendChild(block);
+
+});
+
+chat.scrollTop=chat.scrollHeight;
+
+}
+
 checkLogin();
