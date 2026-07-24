@@ -86,7 +86,7 @@ font-weight:bold;
 }
 
 #leftPanel h3{
-    
+
     margin-top: 45px;
     padding: 20px;
 
@@ -123,9 +123,9 @@ font-weight:bold;
 #addWatchButton{
     margin-top: auto;
     margin-bottom: 20px;
-    margin-left: auto;   
-    margin-right: auto;   
-    display: block;       
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
     border: none;
     background: none;
     font-size: 40px;
@@ -141,9 +141,9 @@ font-weight:bold;
 
 #rightPanel{
     flex:1;
-    background:#efefef;
+    background:white;
     padding:35px;
-    min-width: 625px;
+    min-width:625px;
 }
 
 #rightPanel h2{
@@ -253,4 +253,93 @@ font-weight:bold;
     opacity: 1;
     transform: scale(1.05);
 
+}
+#chatWindow{
+    width:100%;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    background:none;
+}
+
+
+.chatHeader{
+    display:flex;
+    align-items:center;
+    gap:15px;
+    padding:15px;
+    border-bottom:1px solid #ddd;
+    background:white;
+}
+
+#backButton{
+    width:90px;
+    height:35px;
+    font-size:14px;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+#chatMessages{
+    flex:1;
+    overflow-y:auto;
+    padding:15px;
+
+    display:flex;
+    flex-direction:column;
+
+    gap:8px;
+}
+
+#chatInputArea{
+    display:flex;
+    gap:10px;
+    padding:15px;
+    border-top:1px solid #ddd;
+    background:white;
+}
+
+#chatInput{
+    flex:1;
+    padding:12px;
+    border-radius:8px;
+    border:1px solid #bbb;
+}
+
+#sendButton{
+    width:110px;
+    height:45px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+}
+.message{
+    align-self:flex-end;
+
+    max-width:45%;
+
+    padding:8px 12px;
+
+    background:#ffffff;
+
+    border:1px solid #d9d9d9;
+
+    border-radius:14px;
+    border-bottom-right-radius:4px;
+
+    box-sizing:border-box;
+}
+
+.messageText{
+    font-size:14px;
+    line-height:18px;
+    word-break:break-word;
+}
+
+.messageDate{
+    margin-top:3px;
+    font-size:10px;
+    color:#777;
+    text-align:right;
 }
